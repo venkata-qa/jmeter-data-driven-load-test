@@ -1,9 +1,7 @@
-# jmeter-data-driven-load-test
-Load test using Jmeter by driving the data from CSV
+# JMeter Test Plan Structure
 
-
-Final JMeter Structure
-Copy
+## Final JMeter Structure
+```
 Test Plan
   ├── Thread Group 1 (Group 1)
   │     ├── CSV Data Set Config (Group1.csv)
@@ -15,48 +13,65 @@ Test Plan
   │     │     │     ├── Response Assertion
   │     │     │     └── Constant Throughput Timer (Target Throughput = ${throughput_${api_number}})
   │     │     └── View Results Tree
-Explanation of Each Component
-1. CSV Data Set Config
-Reads the API details from the CSV file (e.g., Group1.csv).
+```
 
-Columns include api_number, endpoint, headers, auth_token, payload, expected_response, content_type, correlation_id, end_type, end_iteration, requests_per_hour.
+---
 
-2. JSR223 PreProcessor (Thread Group Configuration)
-Calculates the Number of Threads and Ramp-Up Period for the Thread Group based on the total requests per hour for all APIs in the group.
+## Explanation of Each Component
 
-Stores the calculated values in JMeter variables (numberOfThreads, rampUpPeriod).
+### 1. CSV Data Set Config
+Reads API details from a CSV file (e.g., `Group1.csv`).
 
-3. Loop Controller
-Iterates through each API in the group.
+**Columns in CSV:**
+- `api_number`
+- `endpoint`
+- `headers`
+- `auth_token`
+- `payload`
+- `expected_response`
+- `content_type`
+- `correlation_id`
+- `end_type`
+- `end_iteration`
+- `requests_per_hour`
 
-The loop count is set to the number of APIs in the group.
+### 2. JSR223 PreProcessor (Thread Group Configuration)
+Calculates the Number of Threads and Ramp-Up Period based on the total requests per hour for all APIs in the group.
 
-4. JSR223 PreProcessor (API-Specific Throughput Calculation)
-Calculates the throughput (requests per minute) for each API based on its requests_per_hour.
+**Outputs:**
+- `numberOfThreads`
+- `rampUpPeriod`
 
-Stores the calculated throughput in a JMeter variable (e.g., throughput_1, throughput_2).
+### 3. Loop Controller
+- Iterates through each API in the group.
+- Loop count = Number of APIs in the group.
 
-5. Throughput Controller
-Controls the request rate for each API based on its calculated throughput (throughput_${api_number}).
+### 4. JSR223 PreProcessor (API-Specific Throughput Calculation)
+- Calculates the throughput (requests per minute) for each API using `requests_per_hour`.
+- Stores calculated throughput in a JMeter variable (e.g., `throughput_1`, `throughput_2`).
 
-6. HTTP Request
-Sends the API request using the details from the CSV file.
+### 5. Throughput Controller
+- Controls the request rate per API based on calculated throughput (`throughput_${api_number}`).
 
-7. Response Assertion
-Validates the API response (e.g., status code, response body).
+### 6. HTTP Request
+- Sends API requests using details from the CSV file.
 
-8. Constant Throughput Timer
-Ensures that requests are distributed evenly over the hour.
+### 7. Response Assertion
+- Validates API responses (e.g., status code, response body).
 
-9. View Results Tree
-Displays the results of each API request for debugging.
+### 8. Constant Throughput Timer
+- Ensures that requests are evenly distributed over the test duration.
 
-Groovy Scripts
-1. JSR223 PreProcessor (Thread Group Configuration)
-This script calculates the Number of Threads and Ramp-Up Period for the Thread Group.
+### 9. View Results Tree
+- Displays API request results for debugging purposes.
 
-groovy
-Copy
+---
+
+## Groovy Scripts
+
+### 1. JSR223 PreProcessor (Thread Group Configuration)
+Calculates the number of threads and ramp-up period.
+```groovy
 // Initialize total requests per hour
 int totalRequestsPerHour = 0;
 
@@ -69,7 +84,7 @@ while (vars.get("requests_per_hour") != null) {
 
 // Calculate number of threads and ramp-up period
 int testDuration = 3600; // 1 hour
-int multiplier = 10; // Adjust based on your requirements
+int multiplier = 10; // Adjustable multiplier
 int numberOfThreads = (int) Math.ceil(totalRequestsPerHour / testDuration * multiplier);
 int rampUpPeriod = testDuration;
 
@@ -77,14 +92,14 @@ int rampUpPeriod = testDuration;
 vars.put("numberOfThreads", numberOfThreads.toString());
 vars.put("rampUpPeriod", rampUpPeriod.toString());
 
-// Log the calculated values for debugging
+// Log calculated values
 log.info("Number of Threads: " + numberOfThreads);
 log.info("Ramp-Up Period: " + rampUpPeriod);
-2. JSR223 PreProcessor (API-Specific Throughput Calculation)
-This script calculates the throughput for each API.
+```
 
-groovy
-Copy
+### 2. JSR223 PreProcessor (API-Specific Throughput Calculation)
+Calculates throughput for each API.
+```groovy
 // Read requests_per_hour from CSV
 int requestsPerHour = Integer.parseInt(vars.get("requests_per_hour"));
 
@@ -94,46 +109,55 @@ int throughput = (int) (requestsPerHour / 60);
 // Store throughput in a JMeter variable
 vars.put("throughput_" + vars.get("api_number"), throughput.toString());
 
-// Log the calculated throughput for debugging
+// Log calculated throughput
 log.info("API " + vars.get("api_number") + " Throughput: " + throughput + " requests per minute");
-How It Works
-The CSV Data Set Config reads the API details, including requests_per_hour.
+```
 
-The JSR223 PreProcessor (Thread Group Configuration) calculates the Number of Threads and Ramp-Up Period for the Thread Group.
+---
 
-The Loop Controller iterates through each API in the group.
+## How It Works
 
-The JSR223 PreProcessor (API-Specific Throughput Calculation) calculates the throughput for each API.
+1. The `CSV Data Set Config` reads API details, including `requests_per_hour`.
+2. The `JSR223 PreProcessor (Thread Group Configuration)` calculates the **Number of Threads** and **Ramp-Up Period**.
+3. The `Loop Controller` iterates through each API in the group.
+4. The `JSR223 PreProcessor (API-Specific Throughput Calculation)` calculates throughput for each API.
+5. The `Throughput Controller` ensures that each API runs at its specified throughput.
+6. The `Constant Throughput Timer` evenly distributes requests over the hour.
 
-The Throughput Controller ensures that each API runs at its specified throughput.
+---
 
-The Constant Throughput Timer ensures that requests are distributed evenly over the hour.
+## Example
 
-Example
-Let’s say Group 1 has the following APIs:
+Consider a scenario where `Group 1` has the following APIs:
 
-API 1: 100 requests per hour
+| API  | Requests per Hour | Throughput (Requests per Minute) |
+|------|------------------|--------------------------------|
+| API 1 | 100              | 1.67                           |
+| API 2 | 1000             | 16.67                          |
 
-Throughput = 100 / 60 = 1.67 requests per minute
+### Thread Group Configuration:
+- **Number of Threads**: 10 (calculated based on total requests per hour)
+- **Ramp-Up Period**: 3600 seconds (1 hour)
 
-API 2: 1000 requests per hour
+### Throughput Controllers:
+- **API 1 Throughput** = 1.67 requests per minute
+- **API 2 Throughput** = 16.67 requests per minute
 
-Throughput = 1000 / 60 = 16.67 requests per minute
+---
 
-Thread Group Configuration:
-Number of Threads: 10 (calculated based on total requests per hour)
+## Benefits of This Approach
 
-Ramp-Up Period: 3600 seconds (1 hour)
+### ✅ Dynamic Configuration
+- The Thread Group and API-specific throughput are **calculated automatically**.
 
-Throughput Controllers:
-API 1: Throughput = 1.67 requests per minute
+### ✅ Scalability
+- Supports **any number of APIs** with different load requirements.
 
-API 2: Throughput = 16.67 requests per minute
+### ✅ Flexibility
+- Easily **adjust the multiplier** and other parameters based on test results.
 
-Benefits of This Approach
-Dynamic Configuration: The Thread Group and API-specific throughput are calculated automatically.
+---
 
-Scalability: You can handle any number of APIs with different load requirements.
-
-Flexibility: Easily adjust the multiplier and other parameters based on your test results.
+## Conclusion
+This JMeter test plan dynamically calculates and manages API request load to ensure realistic testing while maintaining flexibility and scalability.
 
