@@ -1,0 +1,18 @@
+import groovy.json.JsonSlurper
+
+// Read headers from the ${headers} variable
+String headersJson = vars.get("headers");
+
+// Parse headers JSON
+def headers = new JsonSlurper().parseText(headersJson);
+
+// Clear existing headers
+sampler.getHeaderManager().clear();
+
+// Add headers to HTTP Header Manager
+headers.each { key, value ->
+    sampler.getHeaderManager().add(new org.apache.jmeter.protocol.http.control.Header(key, value));
+}
+
+// Log headers for debugging
+log.info("Headers for API " + vars.get("api_number") + ": " + headers);
