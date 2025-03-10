@@ -194,6 +194,47 @@ if (methodType?.equalsIgnoreCase("POST") || methodType?.equalsIgnoreCase("PUT"))
 }
 ```
 
+
+📍 **JSR223 PreProcessor - Load API Headers**
+groovy```
+import groovy.json.JsonSlurper
+import org.apache.jmeter.protocol.http.control.Header
+import org.apache.jmeter.protocol.http.control.HeaderManager
+import org.apache.jmeter.services.FileServer
+
+// Get existing Header Manager
+def headerManager = sampler.getHeaderManager()
+
+if (headerManager == null) {
+    log.warn("⚠️ HeaderManager is null. Creating a new one.")
+    headerManager = new HeaderManager()
+    sampler.setHeaderManager(headerManager)
+}
+
+// ✅ Store existing headers to avoid overwriting manually set headers
+def existingHeaders = [:]
+headerManager.getHeaders().each { existingHeader ->
+    existingHeaders[existingHeader.getName()] = existingHeader.getValue()
+}
+
+// ✅ Load API-Specific Headers
+if (headersFile.exists()) {
+    def headersMap = new JsonSlurper().parseText(headersFile.text)
+
+    headersMap.each { key, value ->
+        if (!existingHeaders.containsKey(key)) {  // ✅ Avoid overwriting existing headers
+            headerManager.add(new Header(key, value.toString()))
+            log.info("✅ Added API-Specific Header: " + key + " = " + value)
+        } else {
+            log.info("⚠️ Skipped Header (Already Exists): " + key)
+        }
+    }
+} else {
+    log.warn("⚠️ Headers file not found: " + headersFile.absolutePath)
+}
+
+```
+
 ---
 
 ## 🎯 Final Outcome
