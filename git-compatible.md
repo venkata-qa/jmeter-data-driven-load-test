@@ -73,38 +73,49 @@ log.info("✅ API " + vars.get("api_number") + " | Threads: " + threadsRequired)
 📍 **Script:** `scripts/headers_payload_loader.groovy`
 
 ```groovy
+
 import groovy.json.JsonSlurper
 import org.apache.jmeter.protocol.http.control.Header
 import org.apache.jmeter.protocol.http.control.HeaderManager
+import org.apache.jmeter.services.FileServer
 
+// Get JMeter's base directory dynamically
+String baseDir = FileServer.getFileServer().getBaseDir()
+
+// Get the API folder variable
 String apiFolder = vars.get("api_folder")
 
-// Check if apiFolder is null or empty
 if (apiFolder == null || apiFolder.trim().isEmpty()) {
-    log.error("❌ Error: 'api_folder' variable is not set or is empty!")
+    log.error("❌ 'api_folder' variable is not set or is empty!")
     throw new IllegalArgumentException("api_folder variable is missing")
 }
 
-File folder = new File(apiFolder).getCanonicalFile()
-File headersFile = new File(folder, "headers.json")
+// Dynamically construct the full path
+File folder = new File(baseDir, apiFolder).getCanonicalFile()
+File headersFile = new File(folder, "headers.json").getCanonicalFile()
+File payloadFile = new File(folder, "payload.json").getCanonicalFile()
 
-// Ensure sampler is not null and has a HeaderManager
+log.info("📂 Resolved API folder path: " + folder.absolutePath)
+log.info("📄 Resolved Headers file path: " + headersFile.absolutePath)
+log.info("📄 Resolved Payload file path: " + payloadFile.absolutePath)
+
+// Ensure the script is inside an HTTP Request Sampler
 if (sampler == null) {
-    log.error("❌ Error: 'sampler' is null. Ensure this script runs inside an HTTP Request sampler.")
+    log.error("❌ 'sampler' is null. Ensure the script runs inside an HTTP Request Sampler.")
     throw new IllegalStateException("sampler is null")
 }
 
+// Get the Header Manager
 def headerManager = sampler.getHeaderManager()
 
-// If headerManager is null, initialize a new one
 if (headerManager == null) {
-    log.warn("⚠️ Warning: 'HeaderManager' was null. Creating a new HeaderManager.")
+    log.warn("⚠️ HeaderManager was null. Creating and attaching a new one.")
     headerManager = new HeaderManager()
     sampler.setHeaderManager(headerManager)
 }
 
 // Clear existing headers
-headerManager.removeAll()
+headerManager.clear()
 
 // Load API-Specific Headers
 if (headersFile.exists()) {
@@ -120,7 +131,6 @@ if (headersFile.exists()) {
 // Load Payload (For POST/PUT Requests)
 String methodType = vars.get("api_method")
 if (methodType?.equalsIgnoreCase("POST") || methodType?.equalsIgnoreCase("PUT")) {
-    File payloadFile = new File(folder, "payload.json")
     if (payloadFile.exists()) {
         vars.put("payload", payloadFile.text)
         log.info("✅ Loaded Payload for API: " + vars.get("api_number"))
