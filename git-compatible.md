@@ -65,6 +65,32 @@ log.info("✅ API " + vars.get("api_number") + " | Threads: " + threadsRequired)
 
 ---
 
+## 🔹 2️⃣ JSR223 PreProcessor -  Automatically Remove Quotes in JMeter Variables
+
+📍 **Position:**
+✅ Inside **HTTP Thread Group** (Executes before the request runs).
+
+```groovy
+// List of all JMeter variables that might contain extra quotes
+List<String> variableNames = ["env_type", "api_folder", "api_method", "user_id", "auth_token", 
+                              "region", "host_url", "request_id", "tenant_id", "app_version", "end_point"]
+
+// Iterate through each variable, clean quotes, and store the cleaned value
+variableNames.each { varName ->
+    String rawValue = vars.get(varName)
+    if (rawValue != null) {
+        String cleanedValue = rawValue.trim().replaceAll(/^"|"$/, '') // Remove leading/trailing quotes
+        vars.put(varName, cleanedValue) // Update JMeter variable
+        log.info("✅ Cleaned ${varName}: " + cleanedValue)
+    } else {
+        log.warn("⚠️ Missing variable: ${varName}")
+    }
+}
+
+```
+
+
+
 ## 🔹 3️⃣ JSR223 PreProcessor - Load Headers & Payload
 
 📍 **Position:**
