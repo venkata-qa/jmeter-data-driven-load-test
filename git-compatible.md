@@ -78,8 +78,6 @@ import org.apache.jmeter.protocol.http.control.Header
 import org.apache.jmeter.protocol.http.control.HeaderManager
 
 String apiFolder = vars.get("api_folder")
-File folder = new File(apiFolder).getCanonicalFile()
-File headersFile = new File(folder, "headers.json")
 
 // Check if apiFolder is null or empty
 if (apiFolder == null || apiFolder.trim().isEmpty()) {
@@ -87,7 +85,25 @@ if (apiFolder == null || apiFolder.trim().isEmpty()) {
     throw new IllegalArgumentException("api_folder variable is missing")
 }
 
+File folder = new File(apiFolder).getCanonicalFile()
+File headersFile = new File(folder, "headers.json")
+
+// Ensure sampler is not null and has a HeaderManager
+if (sampler == null) {
+    log.error("❌ Error: 'sampler' is null. Ensure this script runs inside an HTTP Request sampler.")
+    throw new IllegalStateException("sampler is null")
+}
+
 def headerManager = sampler.getHeaderManager()
+
+// If headerManager is null, initialize a new one
+if (headerManager == null) {
+    log.warn("⚠️ Warning: 'HeaderManager' was null. Creating a new HeaderManager.")
+    headerManager = new HeaderManager()
+    sampler.setHeaderManager(headerManager)
+}
+
+// Clear existing headers
 headerManager.removeAll()
 
 // Load API-Specific Headers
@@ -97,17 +113,22 @@ if (headersFile.exists()) {
         headerManager.add(new Header(key, value.toString()))
         log.info("✅ Added API-Specific Header: " + key + " = " + value)
     }
+} else {
+    log.warn("⚠️ Headers file not found: " + headersFile.absolutePath)
 }
 
 // Load Payload (For POST/PUT Requests)
 String methodType = vars.get("api_method")
-if (methodType.equalsIgnoreCase("POST") || methodType.equalsIgnoreCase("PUT")) {
+if (methodType?.equalsIgnoreCase("POST") || methodType?.equalsIgnoreCase("PUT")) {
     File payloadFile = new File(folder, "payload.json")
     if (payloadFile.exists()) {
         vars.put("payload", payloadFile.text)
         log.info("✅ Loaded Payload for API: " + vars.get("api_number"))
+    } else {
+        log.warn("⚠️ Payload file not found: " + payloadFile.absolutePath)
     }
 }
+
 ```
 
 🔹 Ensures each API has its correct headers & payload before sending a request.
