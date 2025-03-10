@@ -56,30 +56,45 @@ log.info("📂 Attempting to read file: " + filePath)
 BufferedReader br = new BufferedReader(new FileReader(filePath))
 String line = br.readLine() // Skip header
 
+// Process each API row
 while ((line = br.readLine()) != null) {
-    String[] data = line.split(",")
+    String[] data = line.split(",") // Split CSV by comma
 
-    String apiNumber = data[0].trim()
-    int requestsPerHour = Integer.parseInt(data[12].trim())
+    // ✅ Validate row before processing
+    if (data.length < 13) {
+        log.warn("⚠️ Skipping invalid row: " + line)
+        continue
+    }
 
-    int testDuration = 3600 // 1 hour
-    int rampUpTime = 300
-    int rampDownTime = 300
+    String apiNumber = data[0].trim() // API Number
+    int requestsPerHour
+
+    try {
+        requestsPerHour = Integer.parseInt(data[12].trim()) // requests_per_hour column
+    } catch (Exception e) {
+        log.warn("⚠️ Invalid requests_per_hour value for API " + apiNumber + ". Skipping row.")
+        continue
+    }
+
+    // ✅ Calculate threads for this API
+    int testDuration = 3600  // 1-hour test
+    int rampUpTime = 300     // 5-minute ramp-up
+    int rampDownTime = 300   // 5-minute ramp-down
     int steadyStateTime = testDuration - (rampUpTime + rampDownTime)
 
-    int threadsRequired = (int) Math.ceil(requestsPerHour / (double) testDuration)
+    int threadsRequired = (int) Math.ceil(requestsPerHour / 3600.0)
 
-    // Store values as JMeter properties
+    // ✅ Store values as JMeter properties (GLOBAL ACCESS)
     props.put("threadsRequired_" + apiNumber, String.valueOf(threadsRequired))
     props.put("rampUpTime_" + apiNumber, String.valueOf(rampUpTime))
     props.put("rampDownTime_" + apiNumber, String.valueOf(rampDownTime))
     props.put("steadyStateTime_" + apiNumber, String.valueOf(steadyStateTime))
 
-    log.info("✅ API " + apiNumber + " | Threads: " + threadsRequired)
+    log.info("✅ Stored: threadsRequired_${apiNumber} = " + threadsRequired)
 }
-br.close()
 
 br.close()
+
 ```
 📌 **Each API's thread count is stored using** `props.put("threadsRequired_API-XXXX")`.
 
