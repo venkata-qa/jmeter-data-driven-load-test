@@ -83,7 +83,7 @@ import org.apache.jmeter.services.FileServer
 String baseDir = FileServer.getFileServer().getBaseDir()
 
 // Get the API folder variable
-String apiFolder = vars.get("api_folder")?.trim()?.replace("\\", "/")
+String apiFolder = vars.get("api_folder")?.trim()?.replace("\\", "/")?.replaceAll(/^"|"$/, '')
 
 
 if (apiFolder == null || apiFolder.trim().isEmpty()) {
