@@ -196,7 +196,8 @@ if (methodType?.equalsIgnoreCase("POST") || methodType?.equalsIgnoreCase("PUT"))
 
 
 📍 **JSR223 PreProcessor - Load API Headers**
-groovy```
+
+```groovy
 import groovy.json.JsonSlurper
 import org.apache.jmeter.protocol.http.control.Header
 import org.apache.jmeter.protocol.http.control.HeaderManager
