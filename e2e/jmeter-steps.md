@@ -33,30 +33,52 @@ Test Plan
 The **Setup Thread Group** reads API data from `config/api_data.csv` and dynamically determines the required threads per API.
 
 ```groovy
+import org.apache.jmeter.services.FileServer
 import java.io.BufferedReader
 import java.io.FileReader
 
-int testDuration = 3600 // 1 hour test
-int rampUpTime = 300
-int rampDownTime = 300
-int steadyStateTime = testDuration - (rampUpTime + rampDownTime)
+// Get the group name from a JMeter variable
+String groupName = vars.get("group_name")?.trim()
 
-BufferedReader br = new BufferedReader(new FileReader("config/api_data.csv"))
+// Validate group name
+if (groupName == null || groupName.isEmpty()) {
+    log.error("❌ 'group_name' variable is missing or empty!")
+    throw new IllegalArgumentException("group_name variable is required")
+}
+
+// Construct the dynamic file path
+String baseDir = FileServer.getFileServer().getBaseDir() // JMeter base directory
+String filePath = baseDir + "/DATA/" + groupName + "/api_data.csv"
+
+log.info("📂 Attempting to read file: " + filePath)
+
+// Read CSV file dynamically
+BufferedReader br = new BufferedReader(new FileReader(filePath))
 String line = br.readLine() // Skip header
 
 while ((line = br.readLine()) != null) {
     String[] data = line.split(",")
+
     String apiNumber = data[0].trim()
     int requestsPerHour = Integer.parseInt(data[12].trim())
+
+    int testDuration = 3600 // 1 hour
+    int rampUpTime = 300
+    int rampDownTime = 300
+    int steadyStateTime = testDuration - (rampUpTime + rampDownTime)
+
     int threadsRequired = (int) Math.ceil(requestsPerHour / (double) testDuration)
-    
+
+    // Store values as JMeter properties
     props.put("threadsRequired_" + apiNumber, String.valueOf(threadsRequired))
     props.put("rampUpTime_" + apiNumber, String.valueOf(rampUpTime))
     props.put("rampDownTime_" + apiNumber, String.valueOf(rampDownTime))
     props.put("steadyStateTime_" + apiNumber, String.valueOf(steadyStateTime))
-    
+
     log.info("✅ API " + apiNumber + " | Threads: " + threadsRequired)
 }
+br.close()
+
 br.close()
 ```
 📌 **Each API's thread count is stored using** `props.put("threadsRequired_API-XXXX")`.
