@@ -1,4 +1,4 @@
-# 🚀 Complete JMeter Test Plan Structure with Script Placement
+https://github.com/venkata-qa/jmeter-data-driven-load-test/blob/main/git-compatible.md# 🚀 Complete JMeter Test Plan Structure with Script Placement
 
 ## 📌 JMeter Test Plan Structure
 
@@ -80,6 +80,12 @@ import org.apache.jmeter.protocol.http.control.HeaderManager
 String apiFolder = vars.get("api_folder")
 File folder = new File(apiFolder).getCanonicalFile()
 File headersFile = new File(folder, "headers.json")
+
+// Check if apiFolder is null or empty
+if (apiFolder == null || apiFolder.trim().isEmpty()) {
+    log.error("❌ Error: 'api_folder' variable is not set or is empty!")
+    throw new IllegalArgumentException("api_folder variable is missing")
+}
 
 def headerManager = sampler.getHeaderManager()
 headerManager.removeAll()
