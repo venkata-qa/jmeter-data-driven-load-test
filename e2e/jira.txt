@@ -1,3 +1,18 @@
+Description:
+As part of the migration process from Docker to Kubernetes, we need to ensure that all necessary steps are completed across Test, Preprod, and Prod environments in phases (10% first, then 100%).
+
+Since Preprod allows only GET requests, we will convert POST and PUT requests into equivalent GET requests to confirm connectivity and ensure services are reachable.
+
+Acceptance Criteria:
+Test Environment: Functional & performance tests completed successfully.
+Preprod Environment:
+Token validation, Kong config, and monitoring checks are done.
+POST & PUT requests are converted to GET for connectivity testing.
+Prod Environment:
+10% rollout validated before moving to 100%.
+Monitoring and logging confirm successful migration.
+Rollback plan is documented and tested.
+
 Checklist for API Migration:
 1. Pre-Migration Checks
 ✅ Identify and document APIs in the group.
