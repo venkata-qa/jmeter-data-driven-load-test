@@ -1,0 +1,57 @@
+Checklist for API Migration:
+1. Pre-Migration Checks
+✅ Identify and document APIs in the group.
+✅ Verify API dependencies and integrations.
+✅ Ensure all Kubernetes manifests (YAML files) are ready.
+✅ Update and validate CI/CD pipelines for K8s deployment.
+✅ Define rollback strategy and test rollback in a non-prod environment.
+
+2. Test Environment (Functional & Performance Tests)
+✅ Deploy APIs to Test environment in Kubernetes.
+✅ Run full functional tests for all request types (GET, POST, PUT, etc.).
+✅ Execute performance tests (latency, throughput, scaling tests).
+✅ Compare API behavior in Docker vs. Kubernetes.
+✅ Ensure no regression issues before moving forward.
+
+3. Preprod Environment (Token, Kong Config, Services, Monitoring)
+✅ Deploy APIs to Preprod environment in Kubernetes.
+✅ Validate authentication tokens (ensure they work correctly).
+✅ Check Kong configurations (rate limits, routing, security rules).
+✅ Verify all API services are deployed and accessible.
+✅ Convert POST & PUT requests to GET requests to confirm connectivity.
+✅ Ensure API GET responses match expected behavior.
+✅ Confirm monitoring and logging are working (Grafana, Prometheus, etc.).
+✅ Run end-to-end validation for GET requests.
+
+4. Prod Environment (10% → 100% Rollout)
+4.1 Partial (10%) Rollout
+✅ Deploy 10% of traffic to Kubernetes using traffic splitting.
+✅ Validate token authentication.
+✅ Verify Kong gateway configurations are correct.
+✅ Confirm services are running and API calls succeed.
+✅ Monitor logs, metrics, and alerts for errors or anomalies.
+✅ Validate API behavior against Docker deployment for consistency.
+
+4.2 Full (100%) Rollout
+✅ Deploy remaining 90% of traffic to Kubernetes.
+✅ Reconfirm token validation, Kong configurations, and service availability.
+✅ Ensure API is functioning without latency spikes or failures.
+✅ Validate monitoring setup and adjust alerts if necessary.
+✅ Perform end-to-end testing with real traffic.
+
+5. Post-Migration Validation
+✅ Ensure all API traffic is successfully routed to Kubernetes.
+✅ Validate scalability and resilience of K8s deployment.
+✅ Update API documentation (deployment architecture, configs, monitoring details).
+✅ Communicate changes to stakeholders and support teams.
+✅ Close the migration story in Jira.
+
+Rollback Plan (If Needed)
+✅ Define rollback steps to revert to Docker in case of failures.
+✅ Ensure rollback is tested in Preprod before applying in Prod.
+✅ Document rollback execution steps and responsible teams.
+
+Dependencies:
+[List any dependencies on other teams, services, or tasks]
+Labels:
+API Migration, Kubernetes, Test-Preprod-Prod, Release Checklist
